@@ -1,114 +1,81 @@
+import controlP5.*;
+// Download ControlP5 library: http://www.sojamo.de/libraries/controlP5
 
-int PALETTE_SIZE = 600;
-int CANVAS_MIN = 0;
-int CANVAS_MAX = 600;
+ControlP5 cp5;
+int PALETTE_SIZE = 450;
 
-// Chroma[][] testColors;
+Chroma[][] plotColors;
 Chroma testColor;
+int lumaValue = 50;
+int chromaValue = 50;
 
 void setup() {
 
-    size(600, 600, "processing.core.PGraphicsRetina2D");
+    size(1200, 600, "processing.core.PGraphicsRetina2D");
+    smooth();
     noStroke();
-    noLoop();
-    // testColors = new Chroma[PALETTE_SIZE][PALETTE_SIZE];
-    testColor = new Chroma("#FF0000");
-    println(testColor.getRed());
-    // printColor("Test Color: ", testColor);
+    frameRate(30);
+
+    cp5 = new ControlP5(this);
+    cp5.setColorBackground(#CCCCCC).setColorForeground(#777777).setColorActive(#000000);
+
+    cp5.addSlider("lumaValue").setPosition(50,25).setRange(0,100).setSize(500, 15);
+    cp5.addSlider("chromaValue").setPosition(650,25).setRange(0,128).setSize(500, 15);
+
 }
 
 void draw() {
 
     background(255);
-    // plotHC(testColors);
+    plotCH(50, 50, PALETTE_SIZE, PALETTE_SIZE, lumaValue);
+    plotHL(650, 50, PALETTE_SIZE, PALETTE_SIZE, chromaValue);
 }
 
-// void plotHC(Chroma[][] chromaPalette) {
-//     smooth();
 
-//     float L = 80;
-//     float C;
-//     float H;
+void plotCH(int x, int y, int x_size, int y_size, int L) {
 
-//     int R;
-//     int G;
-//     int B;
 
-//     for (int i=0; i < PALETTE_SIZE; i++) {
-//         for (int j=0; j < PALETTE_SIZE; j++) {
+    float C;
+    float H;
+    plotColors = new Chroma[x_size][y_size];
 
-//             C = map(i, 0, PALETTE_SIZE, 0, 120);
-//             H = map(j, 0, PALETTE_SIZE, 0, 360);
+    for (int i=0; i < x_size; i++) {
+        for (int j=0; j < y_size; j++) {
+            C = map(i, 0, y_size, 0, 120);
+            H = map(j, 0, x_size, 0, 360);
+            plotColors[i][j] = new Chroma(L, C, H, 255, ColorSpace.LCH);
+            if (plotColors[i][j].clipped()) {
+                fill(255);
+            } else {
+                fill(plotColors[i][j].getColor());
+            }
+            rect(y+j, x+i, 1, 1);
+        }
+    }
+}
 
-//             chromaPalette[i][j] = new Chroma(L, C, H, 255, ColorSpace.LCH);
-//         }
-//     }
 
-//     // Draw
-//     println("Plotting...");
+void plotHL(int x, int y, int x_size, int y_size, int C) {
 
-//     for (int i=0; i < width; i++) {
-//         for (int j=0; j < height; j++) {
-//             int p = (int)map(i, 0, width, 0, PALETTE_SIZE);
-//             int q = (int)map(j, 0, height, 0, PALETTE_SIZE);
 
-//             R = chromaPalette[p][q].getRed();
-//             G = chromaPalette[p][q].getGreen();
-//             B = chromaPalette[p][q].getBlue();
+    float L;
+    float H;
+    plotColors = new Chroma[x_size][y_size];
 
-//             if (chromaPalette[p][q].getClipFlag()) {
-//                 fill(255, 255, 255, 255);
-//             } else {
-//                 fill(R,G,B,255);
-//             }
-//             rect(j, i, (CANVAS_MAX-CANVAS_MIN)/PALETTE_SIZE, (CANVAS_MAX-CANVAS_MIN)/PALETTE_SIZE);
-//         }
-//     }
-// }
-
-// void plotHL(Chroma[][] chromaPalette) {
-//     smooth();
-
-//     float L;
-//     float C = 100;
-//     float H;
-
-//     int R;
-//     int G;
-//     int B;
-
-//     for (int i=0; i < PALETTE_SIZE; i++) {
-//         for (int j=0; j < PALETTE_SIZE; j++) {
-
-//             L = map(i, 0, PALETTE_SIZE, 0, 100);
-//             H = map(j, 0, PALETTE_SIZE, 0, 360);
-
-//             chromaPalette[i][j] = new Chroma(L, C, H, 255, ColorSpace.LCH);
-//         }
-//     }
-
-//     // Draw
-//     println("Plotting...");
-
-//     for (int i=0; i < width; i++) {
-//         for (int j=0; j < height; j++) {
-//             int p = (int)map(i, 0, width, 0, PALETTE_SIZE);
-//             int q = (int)map(j, 0, height, 0, PALETTE_SIZE);
-
-//             R = chromaPalette[p][q].getRed();
-//             G = chromaPalette[p][q].getGreen();
-//             B = chromaPalette[p][q].getBlue();
-
-//             if (chromaPalette[p][q].getClipFlag()) {
-//                 fill(255, 255, 255, 255);
-//             } else {
-//                 fill(R,G,B,255);
-//             }
-//             rect(i, j, (CANVAS_MAX-CANVAS_MIN)/PALETTE_SIZE, (CANVAS_MAX-CANVAS_MIN)/PALETTE_SIZE);
-//         }
-//     }
-// }
-
+    for (int i=0; i < x_size; i++) {
+        for (int j=0; j < y_size; j++) {
+            L = map(j, 0, y_size, 0, 120);
+            H = map(i, 0, x_size, 0, 360);
+            plotColors[i][j] = new Chroma(L, C, H, 255, ColorSpace.LCH);
+            if (plotColors[i][j].clipped()) {
+                fill(255);
+            } else {
+                fill(plotColors[i][j].getColor());
+            }
+            rect(x+i, y+j, 1, 1);
+        }
+    }
+}
 // void printColor(String chromaName, Chroma printColor) {
 //     println(chromaName + "RGB:\t\t" + printColor.getRed() + "\t\t" +
 //         printColor.getGreen() + "\t\t" +

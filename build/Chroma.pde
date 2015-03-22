@@ -23,7 +23,6 @@ References:  Color conversion methods are borrowed from various places as detail
 
 
 
-
 public class Chroma {
 
     // VARIABLES
@@ -34,7 +33,6 @@ public class Chroma {
     private int rgba;
 
     private boolean clip;
-
 
     // CONSTANTS
     private static final float L_MIN = 0.0;
@@ -48,8 +46,6 @@ public class Chroma {
     private static final float X = 0.950470;
     private static final float Y = 1.0;
     private static final float Z = 1.088830;
-
-
 
 
     //CONSTRUCTORS
@@ -108,8 +104,8 @@ public class Chroma {
     public Chroma(String hex_) {
 
         this(   Integer.parseInt(hex_.substring(1,3), 16),
-            Integer.parseInt(hex_.substring(3,5), 16),
-            Integer.parseInt(hex_.substring(5,7), 16));
+                Integer.parseInt(hex_.substring(3,5), 16),
+                Integer.parseInt(hex_.substring(5,7), 16));
     }
 
 
@@ -122,24 +118,34 @@ public class Chroma {
         this.green = Math.round(green_);
         this.blue  = Math.round(blue_);
         this.alpha = Math.round(alpha_);
-        // this.checkRGB();
+
+        this.clip = clipped();
+
+        this.rgba = limit(this.alpha) << 24 | limit(this.red) << 16 | limit(this.green) << 8 | limit(this.blue);
 
     }
 
     private void chromaHSV(float hue_, float sat_, float val_, float alpha_) {
 
+        // Initialize local variables for RGB
         float red_ = 0;
         float green_ = 0;
         float blue_ = 0;
+
+        // Convert value from 0-1 to 0-255
         val_ *= 255;
+
+
         if (sat_ == 0) {
             red_ = green_ = blue_ = val_;
         } else {
 
+            // Wrap hue if is out of 0-360 range
             if (hue_ == 360) hue_ = 0;
             if (hue_ > 360) hue_ -= 360;
             if (hue_ < 0)  hue_ += 360;
 
+            // Transforming chromaticity plane to bottom 3 faces of the RGB cube
             hue_ /= 60;
             int i = (int)Math.floor(hue_);
             float f = hue_ - i;
@@ -157,6 +163,7 @@ public class Chroma {
                 default: break;
             }
         }
+        // set RGB values
         chromaRGB(red_, green_, blue_, alpha_);
     }
 
@@ -192,10 +199,6 @@ public class Chroma {
     // COMPONENTS METHODS
     /////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean getClipFlag() {
-
-        return clip;
-    }
 
     public int getColor() {
         return rgba;
@@ -241,47 +244,68 @@ public class Chroma {
         chromaLCH(l_, c_, h_, 255);
     }
 
+    public boolean clipped() {
+        return this.red < 0 || this.blue < 0 || this.green < 0 ||
+                this.red > 255 || this.blue > 255 || this.green > 255;
+    }
+    public boolean clippedRed() {
+        return this.red < 0 || this.red > 255;
+    }
+
+    public boolean clippedGreen() {
+        return this.green < 0 || this.green > 255;
+    }
+
+    public boolean clippedBlue() {
+        return this.blue < 0 || this.blue > 255;
+    }
 
     // MATH & UTILITY METHODS
     /////////////////////////////////////////////////////////////////////////////////////
 
     private float lab_xyz(float x) {
+
         if (x > 0.206893034) {
             return x * x * x;
         } else {
             return (x - 4.0/29.0) / 7.787037;
         }
     }
+
     private float xyz_rgb(float r) {
+
         return Math.round(255 * (r <= 0.00304 ? 12.92 * r : 1.055 * Math.pow(r, 1 / 2.4) - 0.055));
 
     }
 
-    private float clampRGB(float input, float low, float high) {
-        return Math.max(low, Math.min(high, input));
+    private int limit(int input) {
+
+        return Math.max(Math.min(input, 255),0);
     }
 
-    private float getMax(float input1, float input2, float input3) {
-        return Math.max(input3, Math.max(input1, input2));
-    }
+    // PRINT METHODS
+    /////////////////////////////////////////////////////////////////////////////////////
 
-    private float getMin(float input1, float input2, float input3) {
-        return Math.min(input1, Math.min(input2, input3));
-    }
+    public String toString() {
 
-    private boolean checkRGB() {
-        if (red < 0 || green < 0 || blue < 0 || red > 255 || green > 255 || blue > 255) {
-            red = (int)clampRGB(red, 0, 255);
-            green = (int)clampRGB(green, 0, 255);
-            blue = (int)clampRGB(blue, 0, 255);
+        StringBuilder colorString = new StringBuilder();
 
-            clip = true;
-            return true;
+        colorString.append("[ RGB Color ]");
+        colorString.append(System.getProperty("line.separator"));
 
-        } else {
+        colorString.append("Binary:\t" + Integer.toBinaryString(rgba));
+        colorString.append(System.getProperty("line.separator"));
 
-            return false;
-        }
+        colorString.append("RGBA:\t"
+            + String.format("%03d", (rgba >> 16) & 0xFF) + "\t"
+            + String.format("%03d", (rgba >> 8) & 0xFF) + "\t"
+            + String.format("%03d", rgba & 0xFF) + "\t"
+            + String.format("%03d", (rgba >> 24) & 0xFF));
+
+        colorString.append(System.getProperty("line.separator"));
+
+        return colorString.toString();
+
     }
 
 }
